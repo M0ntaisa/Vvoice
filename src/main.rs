@@ -37,4 +37,23 @@ fn main() {
         .build_input_stream(&device, &config.into(), callback, ())
         .unwrap();
     event_loop.play_stream(stream_id).unwrap();
+
+    // Start a separate thread to handle the push-to-talk input
+    thread::spawn(move || {
+        loop {
+            let push_to_talk = match std::io::stdin().bytes().next() {
+                Some(Ok(b'v')) => true,
+                _ => false,
+            };
+            tx.send(push_to_talk).unwrap();
+        }
+    });
+
+    // Run the event loop until the program is stopped
+    event_loop.run(move |_, _| {
+        // Process events in the main thread
+    });
+
+    // Use the captured audio data for further processing
+    println!("Captured {} samples", audio_data.len());
 }
